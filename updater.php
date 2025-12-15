@@ -118,8 +118,8 @@ class VK_BLS_Updater {
 				return false;
 			}
 
-			// Cache for 12 hours.
-			set_transient( $cache_key, $release, 12 * HOUR_IN_SECONDS );
+			// Cache for 6 hours (shorter cache for faster updates).
+			set_transient( $cache_key, $release, 6 * HOUR_IN_SECONDS );
 		}
 
 		return $release;
@@ -167,6 +167,13 @@ class VK_BLS_Updater {
 			return $transient;
 		}
 
+		$plugin_file = plugin_basename( $this->plugin_file );
+
+		// Get current version from transient or plugin file.
+		$current_version = isset( $transient->checked[ $plugin_file ] )
+			? $transient->checked[ $plugin_file ]
+			: $this->current_version;
+
 		$release = $this->get_latest_release();
 
 		if ( ! $release ) {
@@ -181,9 +188,7 @@ class VK_BLS_Updater {
 		}
 
 		// Check if update is available.
-		if ( $this->version_compare( $this->current_version, $latest_version ) < 0 ) {
-			$plugin_file = plugin_basename( $this->plugin_file );
-
+		if ( $this->version_compare( $current_version, $latest_version ) < 0 ) {
 			$transient->response[ $plugin_file ] = (object) array(
 				'slug'        => $this->plugin_slug,
 				'plugin'      => $plugin_file,
@@ -209,7 +214,10 @@ class VK_BLS_Updater {
 			return $result;
 		}
 
-		if ( $this->plugin_slug !== $args->slug ) {
+		$plugin_file = plugin_basename( $this->plugin_file );
+
+		// Check if this is our plugin by slug or plugin file.
+		if ( ! isset( $args->slug ) || ( $this->plugin_slug !== $args->slug && $plugin_file !== $args->slug ) ) {
 			return $result;
 		}
 
@@ -268,4 +276,3 @@ class VK_BLS_Updater {
 }
 
 // Initialize updater (will be called from main plugin file with correct path).
-

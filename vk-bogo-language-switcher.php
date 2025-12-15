@@ -1,11 +1,12 @@
 <?php
 /**
  * Plugin Name: VK Bogo Language Switcher
- * Description: Bootstrap file for the VK Bogo Language Switcher plugin.
+ * Description: Bogo の言語切替えメニューにスタイルオプションを追加します。
  * Version: 0.1.0
  * Author: Vektor,Inc.
  * Text Domain: vk-bogo-language-switcher
  * Domain Path: /languages
+ * Requires Plugins: bogo
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

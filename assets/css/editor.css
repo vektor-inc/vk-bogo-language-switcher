@@ -1,6 +1,20 @@
 /* Editor styles for VK Bogo Language Switcher */
-html,
-body {
-	color: red !important;
-	background-color: yellow !important;
+.editor-styles-wrapper {
+	.wp-block-bogo-language-switcher {
+		margin:0 !important;
+		padding:0 !important;
+		min-height: auto !important;
+		box-shadow: none;
+		width:auto;
+		/* gap:0; */
+		.components-placeholder__label {
+			display: none;
+		}
+		ul.bogo-language-switcher {
+			margin-block-start: 0;
+			margin-block-end: 0;
+			/* margin-bottom:0; */
+			padding-left:0;
+		}
+	}
 }

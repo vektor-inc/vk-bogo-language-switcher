@@ -42,15 +42,26 @@ function vkbls_enqueue_editor_styles() {
 		return;
 	}
 
-	$style_path = plugin_dir_path( __FILE__ ) . 'assets/css/editor.css';
-	$style_url  = plugin_dir_url( __FILE__ ) . 'assets/css/editor.css';
+	$style_path = plugin_dir_path( __FILE__ ) . 'assets/css/style.css';
+	$style_url  = plugin_dir_url( __FILE__ ) . 'assets/css/style.css';
+	$editor_path = plugin_dir_path( __FILE__ ) . 'assets/css/editor.css';
+	$editor_url  = plugin_dir_url( __FILE__ ) . 'assets/css/editor.css';
 
 	if ( file_exists( $style_path ) ) {
 		wp_enqueue_style(
-			'vkbls-editor',
+			'vkbls-frontend',
 			$style_url,
 			array(),
 			filemtime( $style_path )
+		);
+	}
+
+	if ( file_exists( $editor_path ) ) {
+		wp_enqueue_style(
+			'vkbls-editor',
+			$editor_url,
+			array(),
+			filemtime( $editor_path )
 		);
 	}
 }

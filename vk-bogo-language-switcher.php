@@ -34,18 +34,11 @@ function vkbls_enqueue_frontend_styles() {
 add_action( 'wp_enqueue_scripts', 'vkbls_enqueue_frontend_styles' );
 
 /**
- * Enqueue block editor styles (post/page editor & サイトエディター).
+ * Enqueue block styles (editor iframe / site editor).
  */
-function vkbls_enqueue_editor_styles() {
-	// ensure only in block editors (post/page editor or site editor).
-	if ( ! is_admin() || ! wp_should_load_block_editor_scripts_and_styles() ) {
-		return;
-	}
-
+function vkbls_enqueue_block_styles() {
 	$style_path = plugin_dir_path( __FILE__ ) . 'assets/css/style.css';
 	$style_url  = plugin_dir_url( __FILE__ ) . 'assets/css/style.css';
-	$editor_path = plugin_dir_path( __FILE__ ) . 'assets/css/editor.css';
-	$editor_url  = plugin_dir_url( __FILE__ ) . 'assets/css/editor.css';
 
 	if ( file_exists( $style_path ) ) {
 		wp_enqueue_style(
@@ -55,6 +48,17 @@ function vkbls_enqueue_editor_styles() {
 			filemtime( $style_path )
 		);
 	}
+}
+add_action( 'enqueue_block_assets', 'vkbls_enqueue_block_styles' );
+
+/**
+ * Enqueue block editor-only assets (post/page editor & サイトエディター).
+ */
+function vkbls_enqueue_editor_styles() {
+	$editor_path = plugin_dir_path( __FILE__ ) . 'assets/css/editor.css';
+	$editor_url  = plugin_dir_url( __FILE__ ) . 'assets/css/editor.css';
+	$script_path = plugin_dir_path( __FILE__ ) . 'assets/js/editor.js';
+	$script_url  = plugin_dir_url( __FILE__ ) . 'assets/js/editor.js';
 
 	if ( file_exists( $editor_path ) ) {
 		wp_enqueue_style(
@@ -64,8 +68,28 @@ function vkbls_enqueue_editor_styles() {
 			filemtime( $editor_path )
 		);
 	}
+
+	if ( file_exists( $script_path ) ) {
+		wp_enqueue_script(
+			'vkbls-editor-js',
+			$script_url,
+			array( 'wp-hooks', 'wp-compose', 'wp-element', 'wp-block-editor' ),
+			filemtime( $script_path ),
+			true
+		);
+
+		$class_string = vkbls_get_switcher_classes();
+		wp_add_inline_script(
+			'vkbls-editor-js',
+			sprintf(
+				'window.vkblsSwitcherClasses = %s;',
+				wp_json_encode( $class_string )
+			),
+			'before'
+		);
+	}
 }
-add_action( 'enqueue_block_assets', 'vkbls_enqueue_editor_styles' );
+add_action( 'enqueue_block_editor_assets', 'vkbls_enqueue_editor_styles' );
 
 /**
  * Get classes to append to the language switcher <ul>.
@@ -93,21 +117,18 @@ function vkbls_get_switcher_classes() {
 }
 
 /**
- * Add style class to Bogo language switcher markup.
+ * Append class string to switcher markup.
  *
- * @param string $output Switcher HTML.
- * @param array  $args   Args passed to Bogo.
+ * @param string $output       Switcher HTML.
+ * @param string $class_string Space-separated classes to add.
  * @return string
  */
-function vkbls_add_switcher_style_class( $output, $args ) {
-	$class_string = vkbls_get_switcher_classes();
-
+function vkbls_append_switcher_classes_to_markup( $output, $class_string ) {
 	if ( '' === trim( $class_string ) ) {
 		return $output;
 	}
 
-	// Append our class string to the existing <ul> class attribute.
-	$output = preg_replace_callback(
+	return preg_replace_callback(
 		'/<ul([^>]*)class=(["\'])([^"\']*)(\2)/',
 		static function ( $matches ) use ( $class_string ) {
 			$existing = trim( $matches[3] );
@@ -118,10 +139,37 @@ function vkbls_add_switcher_style_class( $output, $args ) {
 		$output,
 		1
 	);
+}
 
-	return $output;
+/**
+ * Add style class to Bogo language switcher markup (frontend/shortcode).
+ *
+ * @param string $output Switcher HTML.
+ * @param array  $args   Args passed to Bogo.
+ * @return string
+ */
+function vkbls_add_switcher_style_class( $output, $args ) {
+	$class_string = vkbls_get_switcher_classes();
+
+	return vkbls_append_switcher_classes_to_markup( $output, $class_string );
 }
 add_filter( 'bogo_language_switcher', 'vkbls_add_switcher_style_class', 10, 2 );
+
+/**
+ * Add classes when rendering the Bogo language switcher block.
+ *
+ * @param string $block_content Rendered block HTML.
+ * @param array  $block         Block data.
+ * @return string
+ */
+function vkbls_add_switcher_class_to_block( $block_content, $block ) {
+	if ( empty( $block['blockName'] ) || 'bogo/language-switcher' !== $block['blockName'] ) {
+		return $block_content;
+	}
+
+	return vkbls_append_switcher_classes_to_markup( $block_content, vkbls_get_switcher_classes() );
+}
+add_filter( 'render_block', 'vkbls_add_switcher_class_to_block', 10, 2 );
 
 /**
  * Optionally hide current language from switcher links.

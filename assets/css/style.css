@@ -66,7 +66,7 @@ ul.bogo-language-switcher.switcher--text{
 }
 
 /****************************
- *  旗のみのスタイル
+ *  旗とテキストのスタイル
  ****************************/
  ul.bogo-language-switcher:where(:not(.ul.bogo-language-switcher.switcher--text)){
 	gap: 1rem;

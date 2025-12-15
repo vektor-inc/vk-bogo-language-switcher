@@ -5,7 +5,7 @@
   "scripts": {
     "dist": "npm run clean && npm run copy",
     "clean": "rm -rf dist",
-    "copy": "mkdir -p dist/vk-bogo-language-switcher && cp -r assets includes readme.txt vk-bogo-language-switcher.php dist/vk-bogo-language-switcher/",
+    "copy": "mkdir -p dist/vk-bogo-language-switcher && cp -r assets includes readme.txt *.php dist/vk-bogo-language-switcher/",
     "zip": "npm run dist && cd dist && zip -r vk-bogo-language-switcher.zip vk-bogo-language-switcher"
   },
   "keywords": [

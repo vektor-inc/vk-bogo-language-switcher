@@ -82,7 +82,13 @@ class VK_BLS_Updater {
 	 */
 	private function get_latest_release() {
 		$cache_key = 'vkbls_latest_release';
-		$release   = get_transient( $cache_key );
+
+		// Clear cache if needed (for debugging).
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $_GET['vkbls_clear_cache'] ) ) {
+			delete_transient( $cache_key );
+		}
+
+		$release = get_transient( $cache_key );
 
 		if ( false === $release ) {
 			$api_url = sprintf(
@@ -102,6 +108,9 @@ class VK_BLS_Updater {
 			);
 
 			if ( is_wp_error( $response ) ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( 'VK BLS Updater: API request failed - ' . $response->get_error_message() );
+				}
 				return false;
 			}
 
@@ -109,12 +118,18 @@ class VK_BLS_Updater {
 			$code = wp_remote_retrieve_response_code( $response );
 
 			if ( 200 !== $code ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( 'VK BLS Updater: API returned status code %d. Response: %s', $code, $body ) );
+				}
 				return false;
 			}
 
 			$release = json_decode( $body );
 
 			if ( ! $release || ! isset( $release->tag_name ) ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( 'VK BLS Updater: Invalid release data. Response: ' . $body );
+				}
 				return false;
 			}
 
@@ -133,6 +148,9 @@ class VK_BLS_Updater {
 	 */
 	private function get_download_url( $release ) {
 		if ( ! isset( $release->assets ) || ! is_array( $release->assets ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: No assets found in release' );
+			}
 			return false;
 		}
 
@@ -140,6 +158,14 @@ class VK_BLS_Updater {
 			if ( isset( $asset->browser_download_url ) && 'zip' === substr( $asset->name, -3 ) ) {
 				return $asset->browser_download_url;
 			}
+		}
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$asset_names = array();
+			foreach ( $release->assets as $asset ) {
+				$asset_names[] = isset( $asset->name ) ? $asset->name : 'unknown';
+			}
+			error_log( 'VK BLS Updater: No zip file found in assets. Available assets: ' . implode( ', ', $asset_names ) );
 		}
 
 		return false;
@@ -169,10 +195,18 @@ class VK_BLS_Updater {
 
 		$plugin_file = plugin_basename( $this->plugin_file );
 
-		// Get current version from transient or plugin file.
-		$current_version = isset( $transient->checked[ $plugin_file ] )
-			? $transient->checked[ $plugin_file ]
-			: $this->current_version;
+		// Check if this is our plugin.
+		if ( ! isset( $transient->checked[ $plugin_file ] ) ) {
+			return $transient;
+		}
+
+		// Get current version from transient.
+		$current_version = $transient->checked[ $plugin_file ];
+
+		// Clear cache if needed (for debugging, can be removed in production).
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $_GET['vkbls_clear_cache'] ) ) {
+			delete_transient( 'vkbls_latest_release' );
+		}
 
 		$release = $this->get_latest_release();
 
@@ -184,11 +218,18 @@ class VK_BLS_Updater {
 		$download_url  = $this->get_download_url( $release );
 
 		if ( ! $download_url ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( 'VK BLS Updater: No download URL found. Current: %s, Latest: %s', $current_version, $latest_version ) );
+			}
 			return $transient;
 		}
 
 		// Check if update is available.
-		if ( $this->version_compare( $current_version, $latest_version ) < 0 ) {
+		$version_comparison = $this->version_compare( $current_version, $latest_version );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( 'VK BLS Updater: Version comparison - Current: %s, Latest: %s, Result: %d', $current_version, $latest_version, $version_comparison ) );
+		}
+		if ( $version_comparison < 0 ) {
 			$transient->response[ $plugin_file ] = (object) array(
 				'slug'        => $this->plugin_slug,
 				'plugin'      => $plugin_file,
@@ -196,6 +237,11 @@ class VK_BLS_Updater {
 				'url'         => $release->html_url,
 				'package'     => $download_url,
 			);
+		} else {
+			// Remove from response if version is same or newer (in case of downgrade).
+			if ( isset( $transient->response[ $plugin_file ] ) ) {
+				unset( $transient->response[ $plugin_file ] );
+			}
 		}
 
 		return $transient;

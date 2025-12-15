@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VK Bogo Language Switcher
  * Description: Bogo の言語切替えメニューにスタイルオプションを追加します。
- * Version: 0.0.5
+ * Version: 0.0.6
  * Author: Vektor,Inc.
  * Text Domain: vk-bogo-language-switcher
  * Domain Path: /languages

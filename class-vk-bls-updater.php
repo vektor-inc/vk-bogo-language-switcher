@@ -75,6 +75,9 @@ class VK_BLS_Updater {
 	 */
 	private function init_plugin_data() {
 		$this->plugin_slug = plugin_basename( $this->plugin_file );
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
 		$this->plugin_data = get_plugin_data( $this->plugin_file );
 	}
 
@@ -83,19 +86,6 @@ class VK_BLS_Updater {
 	 */
 	private function get_repository_info() {
 		if ( ! empty( $this->github_api_result ) ) {
-			return;
-		}
-
-		$cache_key = 'vkbls_latest_release';
-
-		// Clear cache if needed (for debugging).
-		if ( isset( $_GET['vkbls_clear_cache'] ) && current_user_can( 'manage_options' ) ) {
-			delete_transient( $cache_key );
-		}
-
-		$cached = get_transient( $cache_key );
-		if ( false !== $cached ) {
-			$this->github_api_result = $cached;
 			return;
 		}
 
@@ -129,10 +119,20 @@ class VK_BLS_Updater {
 			return;
 		}
 
-		$this->github_api_result = $releases[0];
-
-		// Cache for 6 hours.
-		set_transient( $cache_key, $this->github_api_result, 6 * HOUR_IN_SECONDS );
+		// Pick first published (non-draft, non-prerelease) release.
+		foreach ( $releases as $release ) {
+			if ( empty( $release ) || ! is_object( $release ) ) {
+				continue;
+			}
+			if ( ! empty( $release->draft ) || ! empty( $release->prerelease ) ) {
+				continue;
+			}
+			if ( empty( $release->tag_name ) ) {
+				continue;
+			}
+			$this->github_api_result = $release;
+			break;
+		}
 	}
 
 	/**
@@ -153,12 +153,7 @@ class VK_BLS_Updater {
 			return $transient;
 		}
 
-		// Check if this is our plugin.
-		if ( ! isset( $transient->checked[ $this->plugin_slug ] ) ) {
-			return $transient;
-		}
-
-		$current_version = $transient->checked[ $this->plugin_slug ];
+		$current_version = isset( $this->plugin_data['Version'] ) ? $this->plugin_data['Version'] : '0.0.0';
 		$latest_version  = ltrim( $this->github_api_result->tag_name, 'v' );
 
 		$do_update = version_compare( $latest_version, $current_version );
@@ -177,11 +172,9 @@ class VK_BLS_Updater {
 			$obj->package     = $package;
 
 			$transient->response[ $this->plugin_slug ] = $obj;
-		} else {
+		} elseif ( isset( $transient->response[ $this->plugin_slug ] ) ) {
 			// Remove from response if version is same or newer (in case of downgrade).
-			if ( isset( $transient->response[ $this->plugin_slug ] ) ) {
-				unset( $transient->response[ $this->plugin_slug ] );
-			}
+			unset( $transient->response[ $this->plugin_slug ] );
 		}
 
 		return $transient;
@@ -190,25 +183,25 @@ class VK_BLS_Updater {
 	/**
 	 * Push in plugin version information to display in the details lightbox.
 	 *
-	 * @param object|bool $false Plugin information.
+	 * @param object|bool $result Plugin information.
 	 * @param string      $action Action type.
 	 * @param object      $response Response object.
 	 * @return object|bool Updated plugin information.
 	 */
-	public function set_plugin_info( $false, $action, $response ) {
+	public function set_plugin_info( $result, $action, $response ) {
 		$this->init_plugin_data();
 		$this->get_repository_info();
 
 		if ( empty( $response->slug ) || $response->slug !== $this->plugin_slug ) {
-			return $false;
+			return $result;
 		}
 
 		if ( empty( $this->github_api_result ) ) {
-			return $false;
+			return $result;
 		}
 
 		if ( ! isset( $this->github_api_result->assets ) || ! is_array( $this->github_api_result->assets ) || empty( $this->github_api_result->assets[0] ) ) {
-			return $false;
+			return $result;
 		}
 
 		$response->last_updated = $this->github_api_result->published_at;
@@ -230,12 +223,12 @@ class VK_BLS_Updater {
 	/**
 	 * Perform additional actions to successfully install our plugin.
 	 *
-	 * @param bool  $true Installation result.
+	 * @param bool  $install_result Installation result.
 	 * @param array $hook_extra Hook extra information.
 	 * @param array $result Installation result.
 	 * @return array Updated installation result.
 	 */
-	public function post_install( $true, $hook_extra, $result ) {
+	public function post_install( $install_result, $hook_extra, $result ) {
 		global $wp_filesystem;
 
 		$this->init_plugin_data();

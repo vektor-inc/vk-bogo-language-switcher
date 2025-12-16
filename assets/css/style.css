@@ -5,6 +5,9 @@ ul.bogo-language-switcher {
 	padding: 0;
 	display: flex;
 	font-size: 12px;
+	li {
+		line-height: 1;
+	}
 	li:where(:not(:has( a ))) {
 		opacity: 0.6;
 	}

@@ -144,9 +144,25 @@ function vkbls_add_dynamic_inline_styles( $handle ) {
 	// Add vertical-padding CSS variable if text style is selected and value is set.
 	$style = isset( $settings['style'] ) ? $settings['style'] : 'flag-text';
 	if ( 'text' === $style ) {
+		$text_decls = array();
+
 		$vertical_padding = isset( $settings['vertical-padding'] ) && ! empty( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : '';
-		if ( ! empty( $vertical_padding ) ) {
-			$css_rules[] = 'ul.bogo-language-switcher.switcher--text { --vkbls-vertical-padding: ' . absint( $vertical_padding ) . 'px; }';
+		if ( '' !== $vertical_padding ) {
+			$text_decls[] = '--vkbls-vertical-padding: ' . absint( $vertical_padding ) . 'px;';
+		}
+
+		$row_gap = isset( $settings['row-gap'] ) && '' !== $settings['row-gap'] ? $settings['row-gap'] : '';
+		if ( '' !== $row_gap ) {
+			$text_decls[] = '--vkbls-row-gap: ' . absint( $row_gap ) . 'px;';
+		}
+
+		$column_gap = isset( $settings['column-gap'] ) && '' !== $settings['column-gap'] ? $settings['column-gap'] : '';
+		if ( '' !== $column_gap ) {
+			$text_decls[] = '--vkbls-column-gap: ' . absint( $column_gap ) . 'px;';
+		}
+
+		if ( ! empty( $text_decls ) ) {
+			$css_rules[] = 'ul.bogo-language-switcher.switcher--text { ' . implode( ' ', $text_decls ) . ' }';
 		}
 	}
 

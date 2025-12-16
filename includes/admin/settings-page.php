@@ -34,6 +34,8 @@ function vkbls_render_style_settings_page() {
 	$hide_current      = (bool) $settings['hide-current'];
 	$font_size         = isset( $settings['font-size'] ) ? $settings['font-size'] : '';
 	$vertical_padding  = isset( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : '';
+	$row_gap           = isset( $settings['row-gap'] ) ? $settings['row-gap'] : '';
+	$column_gap        = isset( $settings['column-gap'] ) ? $settings['column-gap'] : '';
 	?>
 	<div class="wrap">
 		<h1><?php echo esc_html( __( 'スタイル設定', 'vk-bogo-language-switcher' ) ); ?></h1>
@@ -93,14 +95,34 @@ function vkbls_render_style_settings_page() {
 						<p class="description"><?php echo esc_html( __( 'テキストボタン内の上下余白をpx単位で指定します。空欄の場合はデフォルト値（2px）が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
 					</td>
 				</tr>
+				<tr class="vkbls-row-gap-row" style="<?php echo 'text' === $current_style ? '' : 'display: none;'; ?>">
+					<th scope="row"><?php echo esc_html( __( '言語ボタン間の上下余白', 'vk-bogo-language-switcher' ) ); ?></th>
+					<td>
+						<input type="number" name="vk-bogo-setting[row-gap]" value="<?php echo esc_attr( $row_gap ); ?>" min="0" step="1" class="small-text" />
+						<span>px</span>
+						<p class="description"><?php echo esc_html( __( '言語ボタン間の上下余白（行間）をpx単位で指定します。空欄の場合はデフォルト値が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
+					</td>
+				</tr>
+				<tr class="vkbls-column-gap-row" style="<?php echo 'text' === $current_style ? '' : 'display: none;'; ?>">
+					<th scope="row"><?php echo esc_html( __( '言語ボタン間の左右余白', 'vk-bogo-language-switcher' ) ); ?></th>
+					<td>
+						<input type="number" name="vk-bogo-setting[column-gap]" value="<?php echo esc_attr( $column_gap ); ?>" min="0" step="1" class="small-text" />
+						<span>px</span>
+						<p class="description"><?php echo esc_html( __( '言語ボタン間の左右余白（列間）をpx単位で指定します。空欄の場合はデフォルト値が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
+					</td>
+				</tr>
 			</table>
 			<script>
 			(function() {
 				var styleRadios = document.querySelectorAll('input[name="vk-bogo-setting[style]"]');
 				var paddingRow = document.querySelector('.vkbls-vertical-padding-row');
+				var rowGapRow = document.querySelector('.vkbls-row-gap-row');
+				var columnGapRow = document.querySelector('.vkbls-column-gap-row');
 				function togglePaddingRow() {
 					var textSelected = document.querySelector('input[name="vk-bogo-setting[style]"][value="text"]').checked;
 					paddingRow.style.display = textSelected ? '' : 'none';
+					rowGapRow.style.display = textSelected ? '' : 'none';
+					columnGapRow.style.display = textSelected ? '' : 'none';
 				}
 				styleRadios.forEach(function(radio) {
 					radio.addEventListener('change', togglePaddingRow);
@@ -202,6 +224,36 @@ function vkbls_sanitize_vertical_padding( $value ) {
 }
 
 /**
+ * Sanitize row-gap option.
+ *
+ * @param mixed $value Submitted value.
+ * @return string
+ */
+function vkbls_sanitize_row_gap( $value ) {
+	if ( empty( $value ) ) {
+		return '';
+	}
+
+	$value = absint( $value );
+	return $value >= 0 ? (string) $value : '';
+}
+
+/**
+ * Sanitize column-gap option.
+ *
+ * @param mixed $value Submitted value.
+ * @return string
+ */
+function vkbls_sanitize_column_gap( $value ) {
+	if ( empty( $value ) ) {
+		return '';
+	}
+
+	$value = absint( $value );
+	return $value >= 0 ? (string) $value : '';
+}
+
+/**
  * Sanitize settings array.
  *
  * @param mixed $settings Submitted settings.
@@ -209,20 +261,24 @@ function vkbls_sanitize_vertical_padding( $value ) {
  */
 function vkbls_sanitize_settings( $settings ) {
 	$defaults = array(
-		'style'           => 'flag-text',
-		'direction'       => 'horizontal',
-		'hide-current'    => 0,
-		'font-size'       => '',
+		'style'            => 'flag-text',
+		'direction'        => 'horizontal',
+		'hide-current'     => 0,
+		'font-size'        => '',
 		'vertical-padding' => '',
+		'row-gap'          => '',
+		'column-gap'       => '',
 	);
 
 	$settings = is_array( $settings ) ? $settings : array();
 
-	$settings['style']           = vkbls_sanitize_style_option( isset( $settings['style'] ) ? $settings['style'] : $defaults['style'] );
-	$settings['direction']       = vkbls_sanitize_direction_option( isset( $settings['direction'] ) ? $settings['direction'] : $defaults['direction'] );
-	$settings['hide-current']    = vkbls_sanitize_hide_current( isset( $settings['hide-current'] ) ? $settings['hide-current'] : $defaults['hide-current'] );
-	$settings['font-size']       = vkbls_sanitize_font_size( isset( $settings['font-size'] ) ? $settings['font-size'] : $defaults['font-size'] );
+	$settings['style']            = vkbls_sanitize_style_option( isset( $settings['style'] ) ? $settings['style'] : $defaults['style'] );
+	$settings['direction']        = vkbls_sanitize_direction_option( isset( $settings['direction'] ) ? $settings['direction'] : $defaults['direction'] );
+	$settings['hide-current']     = vkbls_sanitize_hide_current( isset( $settings['hide-current'] ) ? $settings['hide-current'] : $defaults['hide-current'] );
+	$settings['font-size']        = vkbls_sanitize_font_size( isset( $settings['font-size'] ) ? $settings['font-size'] : $defaults['font-size'] );
 	$settings['vertical-padding'] = vkbls_sanitize_vertical_padding( isset( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : $defaults['vertical-padding'] );
+	$settings['row-gap']          = vkbls_sanitize_row_gap( isset( $settings['row-gap'] ) ? $settings['row-gap'] : $defaults['row-gap'] );
+	$settings['column-gap']       = vkbls_sanitize_column_gap( isset( $settings['column-gap'] ) ? $settings['column-gap'] : $defaults['column-gap'] );
 
 	return wp_parse_args( $settings, $defaults );
 }
@@ -234,11 +290,13 @@ function vkbls_sanitize_settings( $settings ) {
  */
 function vkbls_get_settings() {
 	$defaults = array(
-		'style'           => 'flag-text',
-		'direction'       => 'horizontal',
-		'hide-current'    => 0,
-		'font-size'       => '',
+		'style'            => 'flag-text',
+		'direction'        => 'horizontal',
+		'hide-current'     => 0,
+		'font-size'        => '',
 		'vertical-padding' => '',
+		'row-gap'          => '',
+		'column-gap'       => '',
 	);
 
 	$saved = get_option( 'vk-bogo-setting', array() );

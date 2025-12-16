@@ -68,6 +68,11 @@ class VK_BLS_Updater {
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'set_transient' ), 10, 1 );
 		add_filter( 'plugins_api', array( $this, 'set_plugin_info' ), 10, 3 );
 		add_filter( 'upgrader_post_install', array( $this, 'post_install' ), 10, 3 );
+
+		// Add admin notice for debugging.
+		if ( isset( $_GET['vkbls_debug'] ) && current_user_can( 'manage_options' ) ) {
+			add_action( 'admin_notices', array( $this, 'debug_notice' ) );
+		}
 	}
 
 	/**
@@ -292,6 +297,42 @@ class VK_BLS_Updater {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Display debug information in admin notice.
+	 */
+	public function debug_notice() {
+		$this->init_plugin_data();
+		$this->get_repository_info();
+
+		$transient = get_site_transient( 'update_plugins' );
+		$checked   = isset( $transient->checked ) ? $transient->checked : array();
+
+		$current_version = isset( $checked[ $this->plugin_slug ] ) ? $checked[ $this->plugin_slug ] : 'Not found';
+		$latest_version  = ! empty( $this->github_api_result ) ? ltrim( $this->github_api_result->tag_name, 'v' ) : 'Not found';
+
+		$has_update = isset( $transient->response[ $this->plugin_slug ] );
+
+		?>
+		<div class="notice notice-info">
+			<h3>VK BLS Updater Debug Info</h3>
+			<p><strong>Plugin Slug:</strong> <?php echo esc_html( $this->plugin_slug ); ?></p>
+			<p><strong>Current Version:</strong> <?php echo esc_html( $current_version ); ?></p>
+			<p><strong>Latest Version:</strong> <?php echo esc_html( $latest_version ); ?></p>
+			<p><strong>Has Update:</strong> <?php echo $has_update ? 'Yes' : 'No'; ?></p>
+			<?php if ( ! empty( $this->github_api_result ) ) : ?>
+				<p><strong>Release Tag:</strong> <?php echo esc_html( $this->github_api_result->tag_name ); ?></p>
+				<p><strong>Assets Count:</strong> <?php echo isset( $this->github_api_result->assets ) ? count( $this->github_api_result->assets ) : 0; ?></p>
+				<?php if ( isset( $this->github_api_result->assets[0] ) ) : ?>
+					<p><strong>Package URL:</strong> <?php echo esc_html( $this->github_api_result->assets[0]->browser_download_url ); ?></p>
+				<?php endif; ?>
+			<?php else : ?>
+				<p><strong>GitHub API Result:</strong> Not available</p>
+			<?php endif; ?>
+			<p><strong>Checked Plugins:</strong> <?php echo esc_html( implode( ', ', array_keys( $checked ) ) ); ?></p>
+		</div>
+		<?php
 	}
 }
 

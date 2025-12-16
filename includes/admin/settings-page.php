@@ -96,7 +96,7 @@ function vkbls_render_style_settings_page() {
 						<p class="description"><?php echo esc_html( __( 'テキストボタン内の上下余白をpx単位で指定します。空欄の場合はデフォルト値（2px）が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
 					</td>
 				</tr>
-				<tr class="vkbls-row-gap-row" style="<?php echo 'text' === $current_style ? '' : 'display: none;'; ?>">
+				<tr class="vkbls-row-gap-row">
 					<th scope="row"><?php echo esc_html( __( '言語ボタン間の上下余白', 'vk-bogo-language-switcher' ) ); ?></th>
 					<td>
 						<input type="number" name="vk-bogo-setting[row-gap]" value="<?php echo esc_attr( $row_gap ); ?>" min="0" step="1" class="small-text" />
@@ -104,7 +104,7 @@ function vkbls_render_style_settings_page() {
 						<p class="description"><?php echo esc_html( __( '言語ボタン間の上下余白（行間）をpx単位で指定します。空欄の場合はデフォルト値が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
 					</td>
 				</tr>
-				<tr class="vkbls-column-gap-row" style="<?php echo 'text' === $current_style ? '' : 'display: none;'; ?>">
+				<tr class="vkbls-column-gap-row">
 					<th scope="row"><?php echo esc_html( __( '言語ボタン間の左右余白', 'vk-bogo-language-switcher' ) ); ?></th>
 					<td>
 						<input type="number" name="vk-bogo-setting[column-gap]" value="<?php echo esc_attr( $column_gap ); ?>" min="0" step="1" class="small-text" />
@@ -125,14 +125,10 @@ function vkbls_render_style_settings_page() {
 			(function() {
 				var styleRadios = document.querySelectorAll('input[name="vk-bogo-setting[style]"]');
 				var paddingRow = document.querySelector('.vkbls-vertical-padding-row');
-				var rowGapRow = document.querySelector('.vkbls-row-gap-row');
-				var columnGapRow = document.querySelector('.vkbls-column-gap-row');
 				var btnMinWidthRow = document.querySelector('.vkbls-btn-min-width-row');
 				function togglePaddingRow() {
 					var textSelected = document.querySelector('input[name="vk-bogo-setting[style]"][value="text"]').checked;
 					paddingRow.style.display = textSelected ? '' : 'none';
-					rowGapRow.style.display = textSelected ? '' : 'none';
-					columnGapRow.style.display = textSelected ? '' : 'none';
 					btnMinWidthRow.style.display = textSelected ? '' : 'none';
 				}
 				styleRadios.forEach(function(radio) {

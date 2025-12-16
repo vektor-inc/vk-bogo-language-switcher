@@ -141,6 +141,20 @@ function vkbls_add_dynamic_inline_styles( $handle ) {
 		$css_rules[] = 'ul.bogo-language-switcher { font-size: ' . absint( $font_size ) . 'px; }';
 	}
 
+	// Add gap variables (applies to all styles).
+	$gap_decls = array();
+	$row_gap   = isset( $settings['row-gap'] ) && '' !== $settings['row-gap'] ? $settings['row-gap'] : '';
+	if ( '' !== $row_gap ) {
+		$gap_decls[] = '--vkbls-row-gap: ' . absint( $row_gap ) . 'px;';
+	}
+	$column_gap = isset( $settings['column-gap'] ) && '' !== $settings['column-gap'] ? $settings['column-gap'] : '';
+	if ( '' !== $column_gap ) {
+		$gap_decls[] = '--vkbls-column-gap: ' . absint( $column_gap ) . 'px;';
+	}
+	if ( ! empty( $gap_decls ) ) {
+		$css_rules[] = 'ul.bogo-language-switcher { ' . implode( ' ', $gap_decls ) . ' }';
+	}
+
 	// Add vertical-padding CSS variable if text style is selected and value is set.
 	$style = isset( $settings['style'] ) ? $settings['style'] : 'flag-text';
 	if ( 'text' === $style ) {
@@ -149,16 +163,6 @@ function vkbls_add_dynamic_inline_styles( $handle ) {
 		$vertical_padding = isset( $settings['vertical-padding'] ) && ! empty( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : '';
 		if ( '' !== $vertical_padding ) {
 			$text_decls[] = '--vkbls-vertical-padding: ' . absint( $vertical_padding ) . 'px;';
-		}
-
-		$row_gap = isset( $settings['row-gap'] ) && '' !== $settings['row-gap'] ? $settings['row-gap'] : '';
-		if ( '' !== $row_gap ) {
-			$text_decls[] = '--vkbls-row-gap: ' . absint( $row_gap ) . 'px;';
-		}
-
-		$column_gap = isset( $settings['column-gap'] ) && '' !== $settings['column-gap'] ? $settings['column-gap'] : '';
-		if ( '' !== $column_gap ) {
-			$text_decls[] = '--vkbls-column-gap: ' . absint( $column_gap ) . 'px;';
 		}
 
 		$btn_min_width = isset( $settings['btn-min-width'] ) && '' !== $settings['btn-min-width'] ? $settings['btn-min-width'] : '';

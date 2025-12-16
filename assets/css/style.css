@@ -72,8 +72,6 @@ ul.bogo-language-switcher.switcher--text{
  *  旗とテキストのスタイル
  ****************************/
  ul.bogo-language-switcher:where(:not(.switcher--text)){
-	gap: 1rem;
-	row-gap: 4px;
 	.bogoflags {
 		margin: 0;
 	}

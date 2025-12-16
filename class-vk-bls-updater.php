@@ -153,14 +153,12 @@ class VK_BLS_Updater {
 			return $transient;
 		}
 
-		$plugin_file = plugin_basename( $this->plugin_file );
-
 		// Check if this is our plugin.
-		if ( ! isset( $transient->checked[ $plugin_file ] ) ) {
+		if ( ! isset( $transient->checked[ $this->plugin_slug ] ) ) {
 			return $transient;
 		}
 
-		$current_version = $transient->checked[ $plugin_file ];
+		$current_version = $transient->checked[ $this->plugin_slug ];
 		$latest_version  = ltrim( $this->github_api_result->tag_name, 'v' );
 
 		$do_update = version_compare( $latest_version, $current_version );
@@ -175,10 +173,10 @@ class VK_BLS_Updater {
 			$obj              = new stdClass();
 			$obj->slug        = $this->plugin_slug;
 			$obj->new_version = $latest_version;
-			$obj->url         = $this->plugin_data['PluginURI'];
+			$obj->url         = isset( $this->plugin_data['PluginURI'] ) && ! empty( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : $this->github_api_result->html_url;
 			$obj->package     = $package;
 
-			$transient->response[ $plugin_file ] = $obj;
+			$transient->response[ $this->plugin_slug ] = $obj;
 		}
 
 		return $transient;

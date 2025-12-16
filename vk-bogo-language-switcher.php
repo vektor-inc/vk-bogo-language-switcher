@@ -161,6 +161,11 @@ function vkbls_add_dynamic_inline_styles( $handle ) {
 			$text_decls[] = '--vkbls-column-gap: ' . absint( $column_gap ) . 'px;';
 		}
 
+		$btn_min_width = isset( $settings['btn-min-width'] ) && '' !== $settings['btn-min-width'] ? $settings['btn-min-width'] : '';
+		if ( '' !== $btn_min_width ) {
+			$text_decls[] = '--vkbls-btn-min-width: ' . absint( $btn_min_width ) . 'px;';
+		}
+
 		if ( ! empty( $text_decls ) ) {
 			$css_rules[] = 'ul.bogo-language-switcher.switcher--text { ' . implode( ' ', $text_decls ) . ' }';
 		}

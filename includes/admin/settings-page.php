@@ -36,6 +36,7 @@ function vkbls_render_style_settings_page() {
 	$vertical_padding  = isset( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : '';
 	$row_gap           = isset( $settings['row-gap'] ) ? $settings['row-gap'] : '';
 	$column_gap        = isset( $settings['column-gap'] ) ? $settings['column-gap'] : '';
+	$btn_min_width     = isset( $settings['btn-min-width'] ) ? $settings['btn-min-width'] : '';
 	?>
 	<div class="wrap">
 		<h1><?php echo esc_html( __( 'スタイル設定', 'vk-bogo-language-switcher' ) ); ?></h1>
@@ -111,6 +112,14 @@ function vkbls_render_style_settings_page() {
 						<p class="description"><?php echo esc_html( __( '言語ボタン間の左右余白（列間）をpx単位で指定します。空欄の場合はデフォルト値が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
 					</td>
 				</tr>
+				<tr class="vkbls-btn-min-width-row" style="<?php echo 'text' === $current_style ? '' : 'display: none;'; ?>">
+					<th scope="row"><?php echo esc_html( __( 'テキストボタンの最小幅', 'vk-bogo-language-switcher' ) ); ?></th>
+					<td>
+						<input type="number" name="vk-bogo-setting[btn-min-width]" value="<?php echo esc_attr( $btn_min_width ); ?>" min="0" step="1" class="small-text" />
+						<span>px</span>
+						<p class="description"><?php echo esc_html( __( 'テキストボタンの最小幅をpx単位で指定します。空欄の場合はデフォルト値（80px）が適用されます。', 'vk-bogo-language-switcher' ) ); ?></p>
+					</td>
+				</tr>
 			</table>
 			<script>
 			(function() {
@@ -118,11 +127,13 @@ function vkbls_render_style_settings_page() {
 				var paddingRow = document.querySelector('.vkbls-vertical-padding-row');
 				var rowGapRow = document.querySelector('.vkbls-row-gap-row');
 				var columnGapRow = document.querySelector('.vkbls-column-gap-row');
+				var btnMinWidthRow = document.querySelector('.vkbls-btn-min-width-row');
 				function togglePaddingRow() {
 					var textSelected = document.querySelector('input[name="vk-bogo-setting[style]"][value="text"]').checked;
 					paddingRow.style.display = textSelected ? '' : 'none';
 					rowGapRow.style.display = textSelected ? '' : 'none';
 					columnGapRow.style.display = textSelected ? '' : 'none';
+					btnMinWidthRow.style.display = textSelected ? '' : 'none';
 				}
 				styleRadios.forEach(function(radio) {
 					radio.addEventListener('change', togglePaddingRow);
@@ -254,6 +265,21 @@ function vkbls_sanitize_column_gap( $value ) {
 }
 
 /**
+ * Sanitize btn-min-width option.
+ *
+ * @param mixed $value Submitted value.
+ * @return string
+ */
+function vkbls_sanitize_btn_min_width( $value ) {
+	if ( empty( $value ) ) {
+		return '';
+	}
+
+	$value = absint( $value );
+	return $value >= 0 ? (string) $value : '';
+}
+
+/**
  * Sanitize settings array.
  *
  * @param mixed $settings Submitted settings.
@@ -268,6 +294,7 @@ function vkbls_sanitize_settings( $settings ) {
 		'vertical-padding' => '',
 		'row-gap'          => '',
 		'column-gap'       => '',
+		'btn-min-width'    => '',
 	);
 
 	$settings = is_array( $settings ) ? $settings : array();
@@ -279,6 +306,7 @@ function vkbls_sanitize_settings( $settings ) {
 	$settings['vertical-padding'] = vkbls_sanitize_vertical_padding( isset( $settings['vertical-padding'] ) ? $settings['vertical-padding'] : $defaults['vertical-padding'] );
 	$settings['row-gap']          = vkbls_sanitize_row_gap( isset( $settings['row-gap'] ) ? $settings['row-gap'] : $defaults['row-gap'] );
 	$settings['column-gap']       = vkbls_sanitize_column_gap( isset( $settings['column-gap'] ) ? $settings['column-gap'] : $defaults['column-gap'] );
+	$settings['btn-min-width']    = vkbls_sanitize_btn_min_width( isset( $settings['btn-min-width'] ) ? $settings['btn-min-width'] : $defaults['btn-min-width'] );
 
 	return wp_parse_args( $settings, $defaults );
 }
@@ -297,6 +325,7 @@ function vkbls_get_settings() {
 		'vertical-padding' => '',
 		'row-gap'          => '',
 		'column-gap'       => '',
+		'btn-min-width'    => '',
 	);
 
 	$saved = get_option( 'vk-bogo-setting', array() );

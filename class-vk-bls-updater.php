@@ -114,11 +114,18 @@ class VK_BLS_Updater {
 		$response = wp_remote_get( $url, $args );
 
 		if ( is_wp_error( $response ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: API request failed - ' . $response->get_error_message() );
+			}
 			return;
 		}
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $response_code ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				$response_body = wp_remote_retrieve_body( $response );
+				error_log( sprintf( 'VK BLS Updater: API returned status code %d. URL: %s. Response: %s', $response_code, $url, $response_body ) );
+			}
 			return;
 		}
 
@@ -126,10 +133,18 @@ class VK_BLS_Updater {
 		$releases      = json_decode( $response_body );
 
 		if ( ! is_array( $releases ) || empty( $releases ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: No releases found or invalid response. Response: ' . $response_body );
+			}
 			return;
 		}
 
 		$this->github_api_result = $releases[0];
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'VK BLS Updater: Latest release tag: ' . $this->github_api_result->tag_name );
+			error_log( 'VK BLS Updater: Assets count: ' . ( isset( $this->github_api_result->assets ) ? count( $this->github_api_result->assets ) : 0 ) );
+		}
 
 		// Cache for 6 hours.
 		set_transient( $cache_key, $this->github_api_result, 6 * HOUR_IN_SECONDS );
@@ -149,26 +164,52 @@ class VK_BLS_Updater {
 		$this->init_plugin_data();
 		$this->get_repository_info();
 
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'VK BLS Updater: Plugin slug: ' . $this->plugin_slug );
+			error_log( 'VK BLS Updater: Checked plugins: ' . print_r( array_keys( $transient->checked ), true ) );
+		}
+
 		if ( empty( $this->github_api_result ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: No GitHub API result' );
+			}
 			return $transient;
 		}
 
 		// Check if this is our plugin.
 		if ( ! isset( $transient->checked[ $this->plugin_slug ] ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: Plugin not found in checked list. Slug: ' . $this->plugin_slug );
+			}
 			return $transient;
 		}
 
 		$current_version = $transient->checked[ $this->plugin_slug ];
 		$latest_version  = ltrim( $this->github_api_result->tag_name, 'v' );
 
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( 'VK BLS Updater: Current version: %s, Latest version: %s', $current_version, $latest_version ) );
+		}
+
 		$do_update = version_compare( $latest_version, $current_version );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'VK BLS Updater: Version comparison result: ' . $do_update );
+		}
 
 		if ( $do_update > 0 ) {
 			if ( ! isset( $this->github_api_result->assets ) || ! is_array( $this->github_api_result->assets ) || empty( $this->github_api_result->assets[0] ) ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( 'VK BLS Updater: No assets found in release' );
+				}
 				return $transient;
 			}
 
 			$package = $this->github_api_result->assets[0]->browser_download_url;
+
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: Package URL: ' . $package );
+			}
 
 			$obj              = new stdClass();
 			$obj->slug        = $this->plugin_slug;
@@ -177,6 +218,10 @@ class VK_BLS_Updater {
 			$obj->package     = $package;
 
 			$transient->response[ $this->plugin_slug ] = $obj;
+
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'VK BLS Updater: Update added to response' );
+			}
 		}
 
 		return $transient;

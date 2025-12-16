@@ -87,7 +87,13 @@ class VK_BLS_Updater {
 		}
 
 		$cache_key = 'vkbls_latest_release';
-		$cached    = get_transient( $cache_key );
+
+		// Clear cache if needed (for debugging).
+		if ( isset( $_GET['vkbls_clear_cache'] ) && current_user_can( 'manage_options' ) ) {
+			delete_transient( $cache_key );
+		}
+
+		$cached = get_transient( $cache_key );
 		if ( false !== $cached ) {
 			$this->github_api_result = $cached;
 			return;
@@ -171,6 +177,11 @@ class VK_BLS_Updater {
 			$obj->package     = $package;
 
 			$transient->response[ $this->plugin_slug ] = $obj;
+		} else {
+			// Remove from response if version is same or newer (in case of downgrade).
+			if ( isset( $transient->response[ $this->plugin_slug ] ) ) {
+				unset( $transient->response[ $this->plugin_slug ] );
+			}
 		}
 
 		return $transient;

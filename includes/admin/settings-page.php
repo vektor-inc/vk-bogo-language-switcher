@@ -39,7 +39,7 @@ function vkbls_render_style_settings_page() {
 	$btn_min_width     = isset( $settings['btn-min-width'] ) ? $settings['btn-min-width'] : '';
 	?>
 	<div class="wrap">
-		<h1><?php echo esc_html( __( 'スタイル設定', 'vk-bogo-language-switcher' ) ); ?></h1>
+		<h1><?php echo esc_html( __( 'VK Bogo Language Switcher スタイル設定', 'vk-bogo-language-switcher' ) ); ?></h1>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'vkbls_style_group' ); ?>
 			<table class="form-table" role="presentation">

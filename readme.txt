@@ -25,5 +25,7 @@ VK Bogo Language Switcher は Bogo の言語切替リストにカスタムクラ
 
 == Chage log ==
 
+* [ 開発環境 ] 開発・CI で使う Node.js を 24 系（24.22.1 以上）に更新
+
 = 0.1.0 =
 * 初期リリース

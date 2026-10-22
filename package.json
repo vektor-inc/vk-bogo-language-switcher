@@ -8,6 +8,9 @@
     "copy": "mkdir -p dist/vk-bogo-language-switcher && cp -r assets includes readme.txt *.php dist/vk-bogo-language-switcher/",
     "zip": "npm run dist && cd dist && zip -r vk-bogo-language-switcher.zip vk-bogo-language-switcher"
   },
+  "volta": {
+    "node": "24.22.1"
+  },
   "keywords": [
     "wordpress",
     "plugin",
